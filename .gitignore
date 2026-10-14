@@ -31,7 +31,9 @@ firebase-debug.*.log
 ui-debug.log
 database-debug.log
 firestore
+firestore-debug.log
 
 # Temporary editor and backup files
 *~
 ~.backup
+*.un~
