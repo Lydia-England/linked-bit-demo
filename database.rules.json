@@ -1,0 +1,62 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "sessions": {
+      "$sessionId": {
+        "public": {
+          ".read": "auth != null && (
+            root.child('sessions').child($sessionId).child('instructorUid').val() === auth.uid ||
+            root.child('sessions').child($sessionId).child('participants').child('A').child('uid').val() === auth.uid ||
+            root.child('sessions').child($sessionId).child('participants').child('B').child('uid').val() === auth.uid
+          )",
+          ".write": false
+        },
+
+        "private": {
+          "A": {
+            ".read": "auth != null && (
+              root.child('sessions').child($sessionId).child('instructorUid').val() === auth.uid ||
+              root.child('sessions').child($sessionId).child('participants').child('A').child('uid').val() === auth.uid
+            )",
+            ".write": false
+          },
+
+          "B": {
+            ".read": "auth != null && (
+              root.child('sessions').child($sessionId).child('instructorUid').val() === auth.uid ||
+              root.child('sessions').child($sessionId).child('participants').child('B').child('uid').val() === auth.uid
+            )",
+            ".write": false
+          }
+        },
+
+        "participants": {
+          ".read": false,
+          ".write": false
+        },
+
+        "invitations": {
+          ".read": false,
+          ".write": false
+        },
+
+        "instructorUid": {
+          ".read": false,
+          ".write": false
+        },
+
+        "server": {
+          ".read": false,
+          ".write": false
+        },
+
+        "history": {
+          ".read": "auth != null && root.child('sessions').child($sessionId).child('instructorUid').val() === auth.uid",
+          ".write": false
+        }
+      }
+    }
+  }
+}
