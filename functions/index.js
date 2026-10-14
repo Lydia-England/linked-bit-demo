@@ -74,11 +74,11 @@ function createSessionCode() {
   }
 
   return code;
-}
+} // end createSessionCode()
 
 function createInvitationToken() {
   return crypto.randomBytes(24).toString("hex");
-}
+} // end createInvitationToken()
 
 async function findUnusedSessionCode(database) {
   for (let attempt = 0; attempt < 10; attempt += 1) {
@@ -97,11 +97,12 @@ async function findUnusedSessionCode(database) {
       "resource-exhausted",
       "Could not generate an unused session code.",
   );
-}
+} // end async function findUnusedSessionCode(database)
 
 exports.createSession = onCall(
     {
       region: REGION,
+      enforceAppCheck: true,
     },
     async (request) => {
       const instructorUid = requireAuthentication(request);
@@ -172,12 +173,13 @@ exports.createSession = onCall(
         groupBToken,
       };
     },
-);
+); // end exports.createSession
 
 
 exports.claimParticipantRole = onCall(
     {
       region: REGION,
+      enforceAppCheck: true,
     },
     async (request) => {
       const participantUid = requireAuthentication(request);
@@ -217,8 +219,8 @@ exports.claimParticipantRole = onCall(
       const sessionRef = database.ref(`sessions/${sessionId}`);
 
       /*
-  *       * Read the complete session from the server.
-  *            */
+    * Read the complete session from the server.
+    */
       const sessionSnapshot = await sessionRef.get();
 
       if (!sessionSnapshot.exists()) {
@@ -234,9 +236,9 @@ exports.claimParticipantRole = onCall(
       const invitation = session.invitations?.[role];
 
       /*
-  *       * Check that the expected participant and invitation
-  *            * records exist.
-  *                 */
+     * Check that the expected participant and invitation
+     * records exist.
+     */
       if (!participant || !invitation) {
         throw new HttpsError(
             "failed-precondition",
@@ -245,8 +247,8 @@ exports.claimParticipantRole = onCall(
       }
 
       /*
-  *       * Check that this is the correct secret invitation link.
-  *            */
+     * Check that this is the correct secret invitation link.
+     */
       if (invitation.token !== token) {
         throw new HttpsError(
             "permission-denied",
@@ -255,12 +257,12 @@ exports.claimParticipantRole = onCall(
       }
 
       /*
-  *       * If another anonymous Firebase user already owns this role,
-  *            * the current browser may not take it over.
-  *                 */
+     * If another anonymous Firebase user already owns this role,
+     * the current browser may not take it over.
+     */
       if (
         participant.uid &&
-      participant.uid !== participantUid
+        participant.uid !== participantUid
       ) {
         throw new HttpsError(
             "already-exists",
@@ -269,10 +271,10 @@ exports.claimParticipantRole = onCall(
       }
 
       /*
-  *       * If this same browser already owns the role, allow the
-  *            * operation to succeed again. This makes the function
-  *                 * idempotent and permits refreshing the participant page.
-  *                      */
+    * If this same browser already owns the role, allow the
+    * operation to succeed again. This makes the function
+    * idempotent and permits refreshing the participant page.
+    */
       const alreadyOwnedByCaller =
       participant.uid === participantUid;
 
@@ -285,7 +287,7 @@ exports.claimParticipantRole = onCall(
       updates[
           `sessions/${sessionId}/participants/${role}/claimedAt`
       ] = alreadyOwnedByCaller && participant.claimedAt ?
-      participant.claimedAt :
+    participant.claimedAt :
       Date.now();
 
       updates[
@@ -293,15 +295,15 @@ exports.claimParticipantRole = onCall(
       ] = true;
 
       /*
-  *       * Work out whether both roles will be claimed after this
-  *            * update has been applied.
-  *                 */
+    * Work out whether both roles will be claimed after this
+    * update has been applied.
+    */
       const otherRole = role === "A" ? "B" : "A";
       const otherUid = session.participants?.[otherRole]?.uid;
 
       const otherRoleClaimed =
       typeof otherUid === "string" &&
-      otherUid.length > 0;
+        otherUid.length > 0;
 
       if (otherRoleClaimed) {
         updates[
@@ -310,10 +312,10 @@ exports.claimParticipantRole = onCall(
       }
 
       /*
-  *       * update() applies all of these path changes together.
-  *            * Participant assignment, invitation use, and status
-  *                 * therefore appear as one database update.
-  *                      */
+   * update() applies all of these path changes together.
+   * Participant assignment, invitation use, and status
+   * therefore appear as one database update.
+   */
       await database.ref().update(updates);
 
       console.log("Participant role claimed:", {
@@ -329,11 +331,12 @@ exports.claimParticipantRole = onCall(
         role,
       };
     },
-);
+); // end exports.claimParticipantRole
 
 exports.measure = onCall(
     {
       region: REGION,
+      enforceAppCheck: true,
     },
     async (request) => {
       const participantUid = requireAuthentication(request);
@@ -460,8 +463,8 @@ exports.measure = onCall(
         aMeasured && bMeasured;
 
         /*
-  *    * Record the result under the current round.
-  *    */
+       * Record the result under the current round.
+       */
         const round = session.public?.round;
 
         session.history ??= {};
@@ -533,11 +536,12 @@ exports.measure = onCall(
 
       return response;
     },
-);
+); // end exports.measure
 
 exports.setEntanglement = onCall(
     {
       region: REGION,
+      enforceAppCheck: true,
     },
     async (request) => {
       const callerUid = requireAuthentication(request);
@@ -615,12 +619,13 @@ exports.setEntanglement = onCall(
         mode,
       };
     },
-);
+); // end exports.setEntanglement
 
 
 exports.nextRound = onCall(
     {
       region: REGION,
+      enforceAppCheck: true,
     },
     async (request) => {
       const callerUid = requireAuthentication(request);
@@ -660,10 +665,10 @@ exports.nextRound = onCall(
       }
 
       const aMeasured =
-  session.private?.A?.measured === true;
+        session.private?.A?.measured === true;
 
       const bMeasured =
-  session.private?.B?.measured === true;
+        session.private?.B?.measured === true;
 
       if (!aMeasured || !bMeasured) {
         throw new HttpsError(
@@ -709,20 +714,21 @@ exports.nextRound = onCall(
         round: nextRoundNumber,
       };
     },
-);
+); // end exports.nextRound
 
 exports.resumeInstructorSession = onCall(
     {
       region: REGION,
+      enforceAppCheck: true,
     },
     async (request) => {
       const callerUid = requireAuthentication(request);
       const sessionId = request.data?.sessionId;
 
       /*
-    *       * Validate the supplied session ID before using it
-    *            * in a database path.
-    *                 */
+     * Validate the supplied session ID before using it
+     * in a database path.
+     */
       if (
         typeof sessionId !== "string" ||
       !/^[A-Z2-9]{8}$/.test(sessionId)
@@ -785,25 +791,6 @@ exports.resumeInstructorSession = onCall(
         groupBToken,
       };
     },
-);
+); // end exports.resumeInstructorSession
 
 
-// or cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-// setGlobalOptions({ maxInstances: 10 });
-
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
-
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
