@@ -362,12 +362,12 @@ exports.measure = onCall(
       const transactionResult =
       await sessionRef.transaction((session) => {
         /*
-   *  * Realtime Database can call the transaction updater
-   *  * initially with null while establishing local state.
-   *  *
-   *  * Returning the existing value, rather than returning
-   *  * undefined, lets Firebase retry with server data.
-   *  */
+     * Realtime Database can call the transaction updater
+     * initially with null while establishing local state.
+     *
+     * Returning the existing value, rather than returning
+     * undefined, lets Firebase retry with server data.
+     */
         if (session === null) {
           return session;
         }
@@ -404,11 +404,11 @@ exports.measure = onCall(
         }
 
         /*
-  * * A participant may measure only once per round.
-  * *
-  * * If the same request is repeated after a network
-  * * interruption, return the previously stored result.
-  * */
+        * A participant may measure only once per round.
+        *
+        * If the same request is repeated after a network
+        * interruption, return the previously stored result.
+        */
         if (group.measured === true) {
           response = {
             ok: true,
@@ -426,19 +426,25 @@ exports.measure = onCall(
 
         if (mode === "entangled") {
           session.server ??= {};
+          /*
+           * The shared result represents Group A's result.
+           * Group B always receives the opposite value.
+           */
 
-          const existingSharedResult =
+          let groupAResult =
             session.server.sharedResult;
 
           if (
-            existingSharedResult === 0 ||
-            existingSharedResult === 1
+            groupAResult !== 0 &&
+            groupAResult !== 1
           ) {
-            result = existingSharedResult;
-          } else {
-            result = randomBit();
-            session.server.sharedResult = result;
+            groupAResult = randomBit();
+            session.server.sharedResult = groupAResult;
           }
+
+          result = role === "A" ?
+          groupAResult :
+          1 - groupAResult;
         } else if (mode === "independent") {
           result = randomBit();
         } else {
